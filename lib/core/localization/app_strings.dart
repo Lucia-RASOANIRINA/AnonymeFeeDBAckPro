@@ -40,6 +40,11 @@ class AppStrings {
     'home': {'mg': 'Fandraisana', 'fr': 'Accueil', 'en': 'Home'},
     'history': {'mg': 'Tantara', 'fr': 'Historique', 'en': 'History'},
     'improvements': {'mg': 'Fanatsarana', 'fr': 'Améliorations', 'en': 'Improvements'},
+    'no_improvements': {
+      'mg': 'Mbola tsy misy fanatsarana navoaka. Miverena atý aoriana.',
+      'fr': 'Aucune amélioration publiée pour le moment. Revenez bientôt.',
+      'en': 'No improvements published yet. Check back soon.',
+    },
     'settings': {'mg': 'Kirakira', 'fr': 'Paramètres', 'en': 'Settings'},
 
     // ---- Accueil ----
