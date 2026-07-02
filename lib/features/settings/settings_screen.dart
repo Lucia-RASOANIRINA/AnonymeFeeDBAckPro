@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/localization/app_strings.dart';
 import '../../shared/providers/settings_provider.dart';
@@ -72,6 +73,17 @@ class SettingsScreen extends ConsumerWidget {
               label: '${(settings.textScale * 100).round()}%',
               onChanged: notifier.setTextScale,
             ),
+          ),
+          const Divider(),
+
+          // --- Récompenses ---
+          _SectionHeader(title: 'Récompenses'),
+          ListTile(
+            leading: const Icon(Icons.payments_outlined),
+            title: const Text('Récompense Mobile Money'),
+            subtitle: const Text('MVola · Orange Money · Airtel Money'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/rewards'),
           ),
         ],
       ),

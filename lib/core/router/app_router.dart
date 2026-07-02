@@ -10,6 +10,7 @@ import '../../features/history/history_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/improvements/improvements_screen.dart';
 import '../../features/qr_scanner/qr_scanner_screen.dart';
+import '../../features/rewards/mobile_money_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
@@ -61,6 +62,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/heatmap',
         builder: (_, _) => const HeatmapScreen(),
+      ),
+      GoRoute(
+        path: '/rewards',
+        builder: (_, _) => const MobileMoneyScreen(),
       ),
       GoRoute(
         path: '/conversation',
