@@ -1,6 +1,7 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/constants/sectors.dart';
 import '../../core/error/error_handler.dart';
@@ -32,6 +33,11 @@ class AdminDashboardScreen extends ConsumerWidget {
               PopupMenuItem(value: 'csv', child: Text('Export CSV')),
               PopupMenuItem(value: 'xlsx', child: Text('Export Excel (.xlsx)')),
             ],
+          ),
+          IconButton(
+            icon: const Icon(Icons.map_outlined),
+            tooltip: 'Carte de chaleur',
+            onPressed: () => context.push('/heatmap'),
           ),
           IconButton(
             icon: const Icon(Icons.refresh),

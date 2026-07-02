@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../features/admin/admin_dashboard_screen.dart';
 import '../../features/conversation/conversation_screen.dart';
 import '../../features/feedback/feedback_form_screen.dart';
+import '../../features/heatmap/heatmap_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/improvements/improvements_screen.dart';
@@ -56,6 +57,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin',
         builder: (_, _) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/heatmap',
+        builder: (_, _) => const HeatmapScreen(),
       ),
       GoRoute(
         path: '/conversation',
