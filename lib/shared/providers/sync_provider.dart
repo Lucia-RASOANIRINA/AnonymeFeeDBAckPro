@@ -23,6 +23,15 @@ class SyncController extends Notifier<SyncState> {
         state = SyncState.offline;
       }
     });
+
+    // Synchro initiale au démarrage : le stream de connectivité n'émet pas
+    // toujours d'événement au lancement, donc sans ceci les feedbacks déjà en
+    // attente restaient non envoyés tant que le réseau ne changeait pas d'état.
+    Future.microtask(() async {
+      final online = await ref.read(isOnlineProvider.future);
+      if (online) sync();
+    });
+
     return SyncState.idle;
   }
 

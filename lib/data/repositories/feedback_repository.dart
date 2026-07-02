@@ -5,6 +5,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:isar_community/isar.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../core/config/app_config.dart';
@@ -83,15 +84,28 @@ class FeedbackRepository {
         .watch(fireImmediately: true);
   }
 
+  /// Éléments non synchronisés : jamais envoyés (`pending`), en `error`, ou
+  /// bloqués en `syncing` (crash pendant une synchro précédente). Les `synced`
+  /// sont exclus.
+  ///
+  /// C'était le bug principal : l'ancienne version ne renvoyait que les
+  /// `pending`, donc un feedback tombé en `error` (coupure réseau, validation
+  /// serveur temporaire...) restait bloqué à jamais et n'était plus jamais
+  /// renvoyé.
   Future<List<FeedbackLocal>> pendingItems() {
     return _isar.feedbackLocals
         .filter()
         .syncStatusEqualTo(LocalSyncStatus.pending)
+        .or()
+        .syncStatusEqualTo(LocalSyncStatus.error)
+        .or()
+        .syncStatusEqualTo(LocalSyncStatus.syncing)
         .findAll();
   }
 
-  /// Pousse tous les feedbacks en attente vers Supabase.
-  /// Sûr à appeler de façon répétée (idempotent via localUuid côté serveur).
+  /// Pousse tous les feedbacks non synchronisés vers Supabase.
+  /// Sûr à appeler de façon répétée (idempotent via `client_uuid` unique
+  /// côté serveur : un doublon est traité comme déjà synchronisé).
   Future<void> syncPending() async {
     final pending = await pendingItems();
     for (final fb in pending) {
@@ -143,6 +157,20 @@ class FeedbackRepository {
             ..lastSyncError = null;
           await _isar.feedbackLocals.put(fb);
         });
+      } on PostgrestException catch (e) {
+        // 23505 = violation de contrainte unique (client_uuid déjà présent) :
+        // le feedback a en réalité déjà été inséré lors d'une tentative
+        // précédente. On le considère donc comme synchronisé (idempotence).
+        if (e.code == '23505') {
+          await _isar.writeTxn(() async {
+            fb
+              ..syncStatus = LocalSyncStatus.synced
+              ..lastSyncError = null;
+            await _isar.feedbackLocals.put(fb);
+          });
+        } else {
+          await _markStatus(fb, LocalSyncStatus.error, error: e.message);
+        }
       } catch (e) {
         await _markStatus(fb, LocalSyncStatus.error, error: e.toString());
       }
