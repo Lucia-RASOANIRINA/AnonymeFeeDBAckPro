@@ -3,6 +3,11 @@
 /// Remplace [url] et [anonKey] par les valeurs de ton projet Supabase
 /// (Dashboard Supabase > Project Settings > API).
 ///
+/// ⚠️ SOURCE UNIQUE DE VÉRITÉ : ces valeurs doivent être IDENTIQUES à celles du
+/// dashboard admin web (web_admin/.env.local). Le mobile et le web doivent
+/// pointer sur le MÊME projet Supabase, sinon les feedbacks envoyés depuis le
+/// mobile n'apparaissent jamais côté admin.
+///
 /// Astuce sécurité : tu peux passer ces valeurs via --dart-define pour ne pas
 /// les committer en clair, par ex :
 ///   flutter run --dart-define=SUPABASE_URL=... --dart-define=SUPABASE_ANON_KEY=...
