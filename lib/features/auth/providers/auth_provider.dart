@@ -1,50 +1,30 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../data/datasources/remote/supabase_service.dart';
 
 /// État de l'authentification anonyme.
 enum AnonAuthState { unknown, authenticating, authenticated, failedOffline }
 
-/// Gère l'authentification ANONYME uniquement (aucun email/téléphone/nom).
+/// FeedbackPro fonctionne SANS authentification : les feedbacks sont insérés
+/// directement (rôle `anon` / clé publique), autorisés par la policy RLS
+/// `for insert to public`. La lecture/modération reste réservée aux admins.
 ///
-/// Au premier lancement on appelle `signInAnonymously()`. La session est ensuite
-/// persistée par supabase_flutter. Si l'appareil est hors ligne au tout premier
-/// lancement, on reste en mode local : les feedbacks sont stockés dans Isar et
-/// l'authentification sera retentée à la prochaine connexion.
+/// On n'appelle plus `signInAnonymously()` : l'auth anonyme peut être désactivée
+/// côté projet (elle renvoyait alors une erreur 422 sur /auth/v1/signup), et
+/// surtout une tentative échouée laissait l'en-tête d'autorisation dans un état
+/// bancal qui faisait ensuite échouer l'insertion (401). Envoi direct = fiable.
 class AuthNotifier extends Notifier<AnonAuthState> {
   @override
-  AnonAuthState build() {
-    final client = ref.read(supabaseClientProvider);
-    return client.auth.currentSession != null
-        ? AnonAuthState.authenticated
-        : AnonAuthState.unknown;
-  }
+  AnonAuthState build() => AnonAuthState.authenticated;
 
-  SupabaseClient get _client => ref.read(supabaseClientProvider);
-
-  /// Assure qu'une session anonyme existe. Idempotent.
+  /// No-op conservé pour compatibilité des appelants (splash, synchro).
+  /// Aucune session n'est nécessaire pour insérer un feedback anonyme.
   Future<void> ensureAnonymousSession() async {
-    if (_client.auth.currentSession != null) {
-      state = AnonAuthState.authenticated;
-      return;
-    }
-    state = AnonAuthState.authenticating;
-    try {
-      // Timeout strict : on ne laisse JAMAIS un appel réseau bloquer le
-      // démarrage. En cas d'échec/lenteur, on bascule en mode local.
-      await _client.auth
-          .signInAnonymously()
-          .timeout(const Duration(seconds: 8));
-      state = AnonAuthState.authenticated;
-    } catch (_) {
-      // Hors ligne, lenteur, ou auth anonyme non activée côté Supabase :
-      // on continue en mode local offline-first.
-      state = AnonAuthState.failedOffline;
-    }
+    state = AnonAuthState.authenticated;
   }
 
-  String? get userId => _client.auth.currentUser?.id;
+  String? get userId =>
+      ref.read(supabaseClientProvider).auth.currentUser?.id;
 }
 
 final authProvider =

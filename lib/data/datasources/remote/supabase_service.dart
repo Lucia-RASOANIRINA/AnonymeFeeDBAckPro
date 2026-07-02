@@ -278,10 +278,12 @@ class SupabaseService {
     }
   }
 
-  /// Verifie la connectivite avec Supabase.
+  /// Verifie la connectivite avec Supabase via une table PUBLIQUE
+  /// (`establishments`). On n'interroge PAS `feedbacks` (lecture réservée aux
+  /// admins), ce qui évite un 401 côté client anonyme.
   Future<bool> isConnected() async {
     try {
-      await _client.from('feedbacks').select().limit(1);
+      await _client.from('establishments').select('id').limit(1);
       return true;
     } catch (e) {
       return false;
