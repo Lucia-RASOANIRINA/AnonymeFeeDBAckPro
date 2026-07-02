@@ -140,6 +140,26 @@ class SupabaseService {
     }
   }
 
+  /// Recherche intelligente d'établissements par nom / adresse / secteur.
+  /// Insensible à la casse (ilike). Retourne [] si la requête est vide.
+  Future<List<Map<String, dynamic>>> searchEstablishments(String query) async {
+    final q = query.trim();
+    if (q.isEmpty) return [];
+    try {
+      final pattern = '%$q%';
+      final res = await _client
+          .from('establishments')
+          .select('id, name, sector_id, address')
+          .or('name.ilike.$pattern,address.ilike.$pattern,sector_id.ilike.$pattern')
+          .order('name', ascending: true)
+          .limit(20);
+      return List<Map<String, dynamic>>.from(res);
+    } catch (e) {
+      print('Erreur searchEstablishments: $e');
+      return [];
+    }
+  }
+
   /// Récupère un établissement par son ID.
   Future<Map<String, dynamic>?> fetchEstablishmentById(String id) async {
     try {

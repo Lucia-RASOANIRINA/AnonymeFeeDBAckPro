@@ -54,6 +54,16 @@ class AppStrings {
       'en': 'Search an establishment or service...',
     },
     'categories': {'mg': 'Sokajy', 'fr': 'Catégories', 'en': 'Categories'},
+    'establishments': {
+      'mg': 'Toerana / sampan-draharaha',
+      'fr': 'Établissements',
+      'en': 'Establishments',
+    },
+    'no_results': {
+      'mg': 'Tsy misy valiny mifanaraka.',
+      'fr': 'Aucun résultat correspondant.',
+      'en': 'No matching results.',
+    },
     'scan_qr': {'mg': 'Tsindrio ny QR', 'fr': 'Scanner un QR', 'en': 'Scan QR'},
     'give_feedback': {'mg': 'Mandefa hevitra', 'fr': 'Donner un avis', 'en': 'Give feedback'},
 

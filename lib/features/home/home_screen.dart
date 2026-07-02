@@ -6,6 +6,8 @@ import '../../core/config/app_config.dart';
 import '../../core/constants/sectors.dart';
 import '../../core/localization/app_strings.dart';
 import '../../shared/providers/sync_provider.dart';
+import 'providers/home_search_provider.dart';
+import 'widgets/search_results.dart';
 import 'widgets/sector_card.dart';
 import 'widgets/sync_status_banner.dart';
 
@@ -18,6 +20,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppStrings.of(context);
     final pending = ref.watch(pendingCountProvider).value ?? 0;
+    final isSearching = ref.watch(homeSearchQueryProvider).trim().isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(
@@ -63,82 +66,83 @@ class HomeScreen extends ConsumerWidget {
           slivers: [
             const SliverToBoxAdapter(child: SyncStatusBanner()),
 
-            // Barre de recherche.
-            // SliverToBoxAdapter(
-            //   child: Padding(
-            //     padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            //     child: SearchBar(
-            //       hintText: t.t('search_hint'),
-            //       leading: const Icon(Icons.search),
-            //       onTap: () {}, // TODO: ouvrir l'écran de recherche dédié
-            //     ),
-            //   ),
-            // ),
-
-            // Accès rapides.
+            // Barre de recherche intelligente.
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _QuickAction(
-                        icon: Icons.history,
-                        label: t.t('history'),
-                        badge: pending > 0 ? pending : null,
-                        onTap: () => context.push('/history'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _QuickAction(
-                        icon: Icons.published_with_changes,
-                        label: t.t('improvements'),
-                        onTap: () => context.push('/improvements'),
-                      ),
-                    ),
-                  ],
-                ),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                child: _HomeSearchField(hint: t.t('search_hint')),
               ),
             ),
 
-            // Titre catégories.
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
-                child: Text(
-                  t.t('categories'),
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-            ),
-
-            // Grille des secteurs.
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
-              sliver: SliverGrid(
-                gridDelegate:
-                    const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  mainAxisSpacing: 12,
-                  crossAxisSpacing: 12,
-                  childAspectRatio: 1.05,
-                ),
-                delegate: SliverChildBuilderDelegate(
-                  (context, index) {
-                    final sector = Sectors.all[index];
-                    return SectorCard(
-                      sector: sector,
-                      onTap: () => context.push(
-                        '/feedback',
-                        extra: {'sectorId': sector.id},
+            // En mode recherche : résultats affichés directement dans l'accueil.
+            if (isSearching)
+              const SliverToBoxAdapter(child: HomeSearchResults())
+            else ...[
+              // Accès rapides.
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _QuickAction(
+                          icon: Icons.history,
+                          label: t.t('history'),
+                          badge: pending > 0 ? pending : null,
+                          onTap: () => context.push('/history'),
+                        ),
                       ),
-                    );
-                  },
-                  childCount: Sectors.all.length,
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _QuickAction(
+                          icon: Icons.published_with_changes,
+                          label: t.t('improvements'),
+                          onTap: () => context.push('/improvements'),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+
+              // Titre catégories.
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 24, 16, 8),
+                  child: Text(
+                    t.t('categories'),
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                ),
+              ),
+
+              // Grille des secteurs.
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
+                sliver: SliverGrid(
+                  gridDelegate:
+                      const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.05,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final sector = Sectors.all[index];
+                      return SectorCard(
+                        sector: sector,
+                        onTap: () => context.push(
+                          '/feedback',
+                          extra: {'sectorId': sector.id},
+                        ),
+                      );
+                    },
+                    childCount: Sectors.all.length,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -177,6 +181,56 @@ class HomeScreen extends ConsumerWidget {
     if (ok == true && context.mounted) {
       context.push('/admin');
     }
+  }
+}
+
+/// Champ de recherche de l'accueil : met à jour [homeSearchQueryProvider] au
+/// fil de la frappe et propose un bouton d'effacement.
+class _HomeSearchField extends ConsumerStatefulWidget {
+  const _HomeSearchField({required this.hint});
+  final String hint;
+
+  @override
+  ConsumerState<_HomeSearchField> createState() => _HomeSearchFieldState();
+}
+
+class _HomeSearchFieldState extends ConsumerState<_HomeSearchField> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasText = _controller.text.isNotEmpty;
+    return TextField(
+      controller: _controller,
+      textInputAction: TextInputAction.search,
+      onChanged: (v) => ref.read(homeSearchQueryProvider.notifier).set(v),
+      decoration: InputDecoration(
+        hintText: widget.hint,
+        prefixIcon: const Icon(Icons.search),
+        suffixIcon: hasText
+            ? IconButton(
+                icon: const Icon(Icons.close),
+                onPressed: () {
+                  _controller.clear();
+                  ref.read(homeSearchQueryProvider.notifier).set('');
+                  setState(() {});
+                },
+              )
+            : null,
+        filled: true,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(28),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+      ),
+    );
   }
 }
 
