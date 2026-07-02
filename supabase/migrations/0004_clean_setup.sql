@@ -182,9 +182,11 @@ create policy "templates_admin_write" on public.templates
 
 -- FEEDBACKS : insertion ouverte aux sessions authentifiées (= anonyme Supabase),
 -- lecture / modération réservées aux admins.
+-- Insert autorisé au rôle anon (clé publique) ET authenticated (session
+-- anonyme), pour fonctionner meme si l'auth anonyme n'est pas activée.
 drop policy if exists "feedbacks_anon_insert" on public.feedbacks;
 create policy "feedbacks_anon_insert" on public.feedbacks
-  for insert to authenticated with check (true);
+  for insert to anon, authenticated with check (true);
 drop policy if exists "feedbacks_admin_select" on public.feedbacks;
 create policy "feedbacks_admin_select" on public.feedbacks
   for select using (public.is_admin());
@@ -197,7 +199,7 @@ create policy "feedbacks_admin_delete" on public.feedbacks
 
 drop policy if exists "messages_user_insert" on public.conversation_messages;
 create policy "messages_user_insert" on public.conversation_messages
-  for insert to authenticated with check (sender = 'user');
+  for insert to anon, authenticated with check (sender = 'user');
 drop policy if exists "messages_admin_insert" on public.conversation_messages;
 create policy "messages_admin_insert" on public.conversation_messages
   for insert to authenticated with check (sender = 'admin' and public.is_admin());
