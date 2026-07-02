@@ -36,11 +36,18 @@ class DashboardStats {
 
 /// Récupère les statistiques. Côté admin uniquement (RLS via rôle admin).
 final dashboardStatsProvider = FutureProvider<DashboardStats>((ref) async {
+  // Garde le résultat en cache : revenir sur le tableau de bord est instantané
+  // (le bouton Rafraîchir invalide explicitement si besoin).
+  ref.keepAlive();
   final client = ref.read(supabaseClientProvider);
   try {
+    // On ne récupère QUE les colonnes utiles (pas problem_details, search_tsv,
+    // photo_urls, themes…) : payload réduit -> affichage plus rapide.
     final rows = await client
         .from('feedbacks')
-        .select()
+        .select(
+          'id, sector_id, rating_normalized, moderation_status, comment, created_at',
+        )
         .order('created_at', ascending: false)
         .limit(500);
     final list = List<Map<String, dynamic>>.from(rows);

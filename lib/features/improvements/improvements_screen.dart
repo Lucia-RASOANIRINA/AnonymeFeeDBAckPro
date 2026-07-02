@@ -8,6 +8,8 @@ import '../../data/datasources/remote/supabase_service.dart';
 /// Provider des améliorations publiées (données réelles Supabase uniquement).
 final improvementsProvider =
     FutureProvider<List<Map<String, dynamic>>>((ref) async {
+  // Cache : réafficher la page est instantané (RefreshIndicator invalide).
+  ref.keepAlive();
   return ref.read(supabaseServiceProvider).fetchImprovements();
 });
 
