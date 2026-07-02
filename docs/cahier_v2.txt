@@ -1,0 +1,69 @@
+
+Je veux que tu développes AnonyFeedback Pro v2.0.0, une version largement améliorée et très utile d’un système complet de retours anonymes avec application mobile et plateforme web admin.
+Objectif du projet
+Créer une solution puissante et pratique permettant aux utilisateurs de soumettre des feedbacks totalement anonymes sur tous types de services (écoles, hôpitaux, hôtels, restaurants, boutiques, administrations, transports, etc.), tout en offrant aux responsables une plateforme web professionnelle pour gérer, analyser et agir rapidement sur ces feedbacks.
+Contraintes techniques
+Mobile : Flutter (dernière version stable)
+Web Admin : Next.js 15 (App Router) + TypeScript + Tailwind CSS
+Backend : Supabase (Auth + PostgreSQL + Storage + Realtime + Edge Functions)
+Base locale mobile : Isar
+Auth Mobile : Supabase Anonymous Sign-in uniquement
+Auth Web Admin : Email + Mot de passe (identifiants par défaut : admin@gmail.com / Lucia@1707)
+Multilingue : Malgache (prioritaire), Français, Anglais
+Offline-first total sur mobile
+Fonctionnalités V2.0.0 (améliorations importantes)
+Côté Utilisateur Mobile :
+Authentification anonyme automatique.
+Accueil avec recherche intelligente et catégories par domaine.
+Scan QR Code + génération de QR codes.
+Localisation GPS facultative avec carte interactive.
+Formulaire de feedback avancé avec contrôles et contraintes en temps réel (champs obligatoires conditionnels, validation dynamique, logique métier) :
+Champs obligatoires selon le secteur (ex. : note obligatoire pour tous, photo obligatoire pour les problèmes graves).
+Contrôles en temps réel : longueur minimale/maximale, format texte, note minimale déclenchant des questions supplémentaires, etc.
+Logique conditionnelle : si note < 5 → afficher questions détaillées sur les problèmes ; si localisation activée → proposer carte, etc.
+Upload de photos et courtes vidéos compressées.
+Conversations 2-way anonymes en temps réel.
+Historique personnel des feedbacks.
+Page publique des améliorations réalisées.
+Notifications push intelligentes.
+Accès sécurisé à la plateforme web admin depuis l’application (bouton caché, code PIN ou biométrie pour les admins).
+Côté Plateforme Web Admin (Next.js) :
+Page de connexion sécurisée.
+Dashboard général avec statistiques globales.
+Gestion complète des établissements et domaines (écoles, hôpitaux, hôtels, restaurants, etc.).
+Espace dédié par établissement : visualisation des feedbacks, contact direct, publication d’actions.
+Contrôles et contraintes en temps réel sur tout le système (validation des données, alertes automatiques).
+Statistiques avancées : positifs/négatifs, carte de chaleur, tendances, comparaison entre établissements.
+Modération avancée avec alertes prioritaires.
+Export des données (CSV, Excel, PDF) et rapports automatisés.
+Éditeur visuel de templates de formulaires.
+Gestion multi-admin avec rôles (Super Admin, Admin Domaine, Modérateur).
+Nouvelles fonctionnalités très utiles ajoutées pour la v2.0.0 :
+Système d’alertes intelligentes (feedback critique → notification immédiate à l’admin).
+Suggestion automatique d’actions correctives via IA simple.
+Carte interactive globale des problèmes (heatmap).
+Mode « Feedback express » (3 questions rapides).
+Possibilité d’ajouter des pièces jointes (documents PDF, audio).
+Système de suivi du statut des feedbacks (En cours / Traité / Résolu).
+Filtrage avancé et recherche full-text.
+Version publique consultable des statistiques anonymisées par établissement (pour transparence).
+Support vocal pour dicter le feedback (speech-to-text).
+Traduction automatique des feedbacks (entre malgache/français/anglais).
+Historique d’audit des actions prises.
+Possibilité de marquer un feedback comme « Prioritaire » ou « Résolu ».
+Dashboard avec graphiques interactifs (évolution mensuelle, répartition par secteur).
+Exigences Non-fonctionnelles
+Anonymat maximal côté utilisateur.
+Validation et contraintes en temps réel très robustes sur tous les formulaires (mobile + web).
+Gestion intelligente de la logique des données dans le formulaire de feedback.
+UI/UX moderne, fluide et intuitive.
+Code propre, modulaire et bien commenté.
+Maintenant, génère pour moi dans l’ordre suivant :
+Structure complète des dossiers (Flutter Mobile + Next.js Web Admin)
+Configuration Supabase (tables, RLS, triggers pour contraintes en temps réel)
+Liste des packages Flutter (pubspec.yaml)
+Liste des dépendances Next.js (package.json)
+Schéma détaillé de la base de données PostgreSQL
+Planning détaillé sur 30 jours
+Code de base des parties principales (Formulaire Feedback Mobile avec validation temps réel + Logique conditionnelle, Login Admin Web, Dashboard)
+crée aussi une doicument pdf qui est une doncuentation sur l'application de 10 pages; avec introductionction; analyse des besoins, analyse des contrainte, argument de choix des tech ; arguments du fait d'avoir choisi toutes les domaine sur le feedback au lieu de un domaine; conception uml ; conclusion ; tables des matières n'oublie pas
