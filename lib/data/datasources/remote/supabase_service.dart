@@ -3,6 +3,8 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../core/utils/app_logger.dart';
+
 /// Accès centralisé au client Supabase.
 final supabaseClientProvider = Provider<SupabaseClient>(
   (ref) => Supabase.instance.client,
@@ -56,7 +58,7 @@ class SupabaseService {
       
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
-      print('Erreur fetchImprovementsByEstablishment: $e');
+      AppLogger.warn('fetchImprovementsByEstablishment', e);
       return [];
     }
   }
@@ -71,7 +73,7 @@ class SupabaseService {
       
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
-      print('Erreur fetchAllImprovements: $e');
+      AppLogger.warn('fetchAllImprovements', e);
       return [];
     }
   }
@@ -118,7 +120,7 @@ class SupabaseService {
       
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
-      print('Erreur fetchEstablishments: $e');
+      AppLogger.warn('fetchEstablishments', e);
       return [];
     }
   }
@@ -138,7 +140,7 @@ class SupabaseService {
           .limit(20);
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
-      print('Erreur searchEstablishments: $e');
+      AppLogger.warn('searchEstablishments', e);
       return [];
     }
   }
@@ -153,7 +155,7 @@ class SupabaseService {
           .maybeSingle();
       return res;
     } catch (e) {
-      print('Erreur fetchEstablishmentById: $e');
+      AppLogger.warn('fetchEstablishmentById', e);
       return null;
     }
   }
@@ -191,7 +193,7 @@ class SupabaseService {
       
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
-      print('Erreur fetchFeedbacks: $e');
+      AppLogger.warn('fetchFeedbacks', e);
       return [];
     }
   }
@@ -207,7 +209,7 @@ class SupabaseService {
       
       return List<Map<String, dynamic>>.from(res);
     } catch (e) {
-      print('Erreur fetchFeedbacksBySector: $e');
+      AppLogger.warn('fetchFeedbacksBySector', e);
       return [];
     }
   }
@@ -226,7 +228,7 @@ class SupabaseService {
       }
       return counts;
     } catch (e) {
-      print('Erreur countFeedbacksBySector: $e');
+      AppLogger.warn('countFeedbacksBySector', e);
       return {};
     }
   }
