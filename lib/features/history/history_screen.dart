@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/constants/sectors.dart';
@@ -89,8 +90,16 @@ class _HistoryTile extends StatelessWidget {
       LocalSyncStatus.pending => (Icons.cloud_upload_outlined, Colors.orange),
     };
 
+    final canChat = item.serverId != null && item.serverId!.isNotEmpty;
+
     return Card(
       child: ListTile(
+        onTap: canChat
+            ? () => context.push('/conversation', extra: {
+                  'feedbackId': item.serverId,
+                  'anonCode': item.anonCode,
+                })
+            : null,
         leading: CircleAvatar(
           backgroundColor:
               (sector?.color ?? Colors.grey).withValues(alpha: 0.15),

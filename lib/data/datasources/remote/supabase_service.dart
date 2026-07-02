@@ -204,6 +204,44 @@ class SupabaseService {
     await _client.from('feedbacks').update(fields).eq('id', id);
   }
 
+  /// Conversation 2-way : récupère les messages d'un feedback via son
+  /// `anon_code` (RPC sécurisée `get_conversation`, connue du seul auteur).
+  Future<List<Map<String, dynamic>>> fetchConversation(String anonCode) async {
+    final res = await _client.rpc(
+      'get_conversation',
+      params: {'p_anon_code': anonCode},
+    );
+    return List<Map<String, dynamic>>.from(res as List);
+  }
+
+  /// Envoie un message côté utilisateur (sender = 'user').
+  Future<void> sendUserMessage({
+    required String feedbackId,
+    required String anonCode,
+    required String body,
+  }) async {
+    await _client.from('conversation_messages').insert({
+      'feedback_id': feedbackId,
+      'anon_code': anonCode,
+      'sender': 'user',
+      'body': body,
+    });
+  }
+
+  /// Envoie un message côté admin (sender = 'admin', RLS admin requise).
+  Future<void> sendAdminMessage({
+    required String feedbackId,
+    required String anonCode,
+    required String body,
+  }) async {
+    await _client.from('conversation_messages').insert({
+      'feedback_id': feedbackId,
+      'anon_code': anonCode,
+      'sender': 'admin',
+      'body': body,
+    });
+  }
+
   /// Récupère les feedbacks par secteur.
   Future<List<Map<String, dynamic>>> fetchFeedbacksBySector(String sectorId) async {
     try {

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/admin/admin_dashboard_screen.dart';
+import '../../features/conversation/conversation_screen.dart';
 import '../../features/feedback/feedback_form_screen.dart';
 import '../../features/history/history_screen.dart';
 import '../../features/home/home_screen.dart';
@@ -55,6 +56,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/admin',
         builder: (_, _) => const AdminDashboardScreen(),
+      ),
+      GoRoute(
+        path: '/conversation',
+        builder: (context, state) {
+          final extra = state.extra as Map<String, dynamic>?;
+          return ConversationScreen(
+            feedbackId: extra?['feedbackId'] as String? ?? '',
+            anonCode: extra?['anonCode'] as String? ?? '',
+            asAdmin: extra?['asAdmin'] as bool? ?? false,
+          );
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
