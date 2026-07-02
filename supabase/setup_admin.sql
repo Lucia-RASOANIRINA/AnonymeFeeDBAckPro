@@ -1,9 +1,9 @@
 -- =============================================================================
--- Désigner luciarasoanirina8@gmail.com comme administrateur (super_admin).
+-- Désigner admin@gmail.com comme administrateur (super_admin).
 -- =============================================================================
 -- PRÉREQUIS : le compte doit d'abord EXISTER dans Supabase Auth.
 --   1. Supabase → Authentication → Users → « Add user »
---      Email    : luciarasoanirina8@gmail.com
+--      Email    : admin@gmail.com
 --      Password : (choisis un mot de passe) — coche « Auto Confirm User ».
 --   2. Exécute ce script dans Supabase → SQL Editor.
 --
@@ -12,9 +12,9 @@
 -- =============================================================================
 
 insert into public.admins (user_id, role, display_name)
-select u.id, 'super_admin', 'Lucia Rasoanirina'
+select u.id, 'super_admin', 'Administrateur'
 from auth.users u
-where u.email = 'luciarasoanirina8@gmail.com'
+where u.email = 'admin@gmail.com'
 on conflict (user_id) do update
   set role = 'super_admin',
       display_name = excluded.display_name;
@@ -23,4 +23,4 @@ on conflict (user_id) do update
 select a.user_id, u.email, a.role
 from public.admins a
 join auth.users u on u.id = a.user_id
-where u.email = 'luciarasoanirina8@gmail.com';
+where u.email = 'admin@gmail.com';
