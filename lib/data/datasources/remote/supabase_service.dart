@@ -21,38 +21,21 @@ class SupabaseService {
   }
 
   /// Récupère les améliorations publiées (table publique en lecture seule).
-  /// Inclut les relations avec les établissements et les feedbacks.
+  ///
+  /// IMPORTANT : on ne sélectionne QUE les colonnes réellement affichées.
+  /// Auparavant la requête embarquait `feedback:feedback_id(...)`, or la table
+  /// `feedbacks` est en lecture réservée aux admins (RLS). Pour une session
+  /// anonyme (mobile), cet embed pouvait faire échouer toute la requête, d'où le
+  /// symptôme « aucune amélioration » alors que les données existent.
   Future<List<Map<String, dynamic>>> fetchImprovements() async {
-    try {
-      final res = await _client
-          .from('improvements')
-          .select('''
-            id,
-            title,
-            description,
-            before_photo_url,
-            after_photo_url,
-            published_at,
-            establishment:establishment_id (
-              id,
-              name,
-              sector_id,
-              address
-            ),
-            feedback:feedback_id (
-              id,
-              comment,
-              anon_code
-            )
-          ''')
-          .order('published_at', ascending: false)
-          .limit(50);
-      
-      return List<Map<String, dynamic>>.from(res);
-    } catch (e) {
-      print('Erreur fetchImprovements: $e');
-      return [];
-    }
+    final res = await _client
+        .from('improvements')
+        .select(
+          'id, title, description, before_photo_url, after_photo_url, published_at, establishment_id',
+        )
+        .order('published_at', ascending: false)
+        .limit(50);
+    return List<Map<String, dynamic>>.from(res);
   }
 
   /// Récupère les améliorations par établissement.
