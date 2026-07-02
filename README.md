@@ -204,8 +204,18 @@ un artefact depuis `dl.google.com`. Marche à suivre :
 > fonctionnent même hors ligne.
 
 **Avertissement « plugins that apply Kotlin Gradle Plugin (KGP) … »**
-👉 Simple *warning* de Flutter (compatibilité future), **non bloquant**. Tu peux
-l'ignorer ; il ne fait pas échouer le build.
+👉 Simple *warning* de Flutter (compatibilité future), **non bloquant** : il
+provient de **plugins tiers** (`image_picker_android`, `mobile_scanner`,
+`shared_preferences_android`, `url_launcher_android`, `package_info_plus`,
+`flutter_image_compress_common`) qui n'ont pas encore migré vers *Built-in
+Kotlin*. Aucune action côté app ne le supprime tant que les plugins ne sont pas
+mis à jour. Le build **réussit** malgré ce message. Pour tenter de le réduire
+quand des versions compatibles existent :
+```bash
+flutter pub upgrade --major-versions
+```
+La bascule `org.jetbrains.kotlin.android` (2.3.20) est déjà déclarée au niveau
+`android/settings.gradle.kts`.
 
 ### Identifiants Supabase
 `lib/core/config/supabase_config.dart` :
@@ -232,9 +242,13 @@ fl_chart · qr_flutter · csv · excel · intl · flutter_localizations.
 **Initialiser / mettre à jour le schéma** (SQL Editor, dans l'ordre) :
 `0001_init.sql` → `0002_storage.sql` → `0003_v2.sql`.
 
-**Désigner l'administrateur** (`luciarasoanirina8@gmail.com`) :
+**Désigner l'administrateur** (`admin@gmail.com`) :
 1. Authentication → Users → *Add user* (email + mot de passe, *Auto Confirm*).
 2. Exécuter `supabase/setup_admin.sql`.
+
+> ⚠️ Projet Supabase utilisé partout : `bwkqzmdodbewhbrvkzpv`. Renseigne la clé
+> anon (Project Settings → API) dans `lib/core/config/supabase_config.dart`
+> (mobile) **et** `web_admin/.env.local` (web) — elles doivent être identiques.
 
 **(Optionnel) Données de démonstration réalistes** : exécuter
 `supabase/seed_demo.sql` (n'efface rien ; respecte les contraintes serveur).
@@ -250,11 +264,25 @@ fl_chart · qr_flutter · csv · excel · intl · flutter_localizations.
 - ✅ **Admin peut tout gérer** : modération des feedbacks (statut, priorité,
   suppression), CRUD établissements, CRUD améliorations, gestion des alertes.
 
-### Reste à brancher (stubs documentés)
+### Fonctionnalités avancées (désormais branchées)
 
-- Edge Function d'**analyse IA** (sentiment, thèmes) → remplit `feedbacks.sentiment/themes`
-- **Notifications push** (FCM + Edge Function) pour réponses et améliorations
-- Écran de **conversation 2-way** (utilise la RPC `get_conversation`)
-- **Export CSV/Excel** côté admin (packages `csv`/`excel` déjà présents)
-- **Mobile Money** (MVola / Orange / Airtel) pour récompenses optionnelles
-- **Heatmap** des problèmes géolocalisés (flutter_map + clustering)
+- ✅ **Analyse IA** : Edge Function `analyze-feedback` (sentiment + thèmes,
+  heuristique locale + LLM optionnel) → remplit `feedbacks.sentiment/themes`.
+- ✅ **Notifications push** : Edge Function `send-push` (FCM HTTP v1). Intégration
+  mobile `firebase_messaging` décrite dans `supabase/functions/README.md`.
+- ✅ **Conversation 2-way** : écran `/conversation` (RPC `get_conversation`),
+  ouvrable depuis l'historique d'un feedback synchronisé.
+- ✅ **Export CSV/Excel** côté admin : `AdminExportService` (menu Export du
+  tableau de bord) génère `feedbacks_export.csv` / `.xlsx`.
+- ✅ **Mobile Money** (MVola / Orange / Airtel) : écran `/rewards` (Paramètres →
+  Récompenses).
+- ✅ **Heatmap** des problèmes géolocalisés : écran `/heatmap` (flutter_map +
+  OSM), accessible depuis le tableau de bord admin.
+
+### Robustesse
+
+- ✅ **Gestion globale des exceptions** : `runZonedGuarded`, `FlutterError.onError`,
+  écran de démarrage clair en cas d'échec d'init, messages utilisateur traduits.
+- ✅ **Re-synchronisation complète** de l'historique local (bouton dans
+  l'Historique), idempotente via `client_uuid`.
+- ✅ **Logo FeedbackPro** comme icône de lancement Android et dans l'admin web.
