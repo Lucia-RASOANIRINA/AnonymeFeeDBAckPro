@@ -222,7 +222,35 @@ go_router · mobile_scanner · geolocator · flutter_map + latlong2 ·
 image_picker · flutter_image_compress · connectivity_plus · cached_network_image ·
 fl_chart · qr_flutter · csv · excel · intl · flutter_localizations.
 
-## 5. Reste à brancher (stubs documentés)
+## 5. Base de données réelle & compte admin
+
+> Le mobile **et** le dashboard web doivent pointer sur le **même** projet
+> Supabase, sinon les données ne sont pas partagées.
+> - Mobile : `lib/core/config/supabase_config.dart`
+> - Web    : `web_admin/.env.local` (copie depuis `web_admin/.env.example`)
+
+**Initialiser / mettre à jour le schéma** (SQL Editor, dans l'ordre) :
+`0001_init.sql` → `0002_storage.sql` → `0003_v2.sql`.
+
+**Désigner l'administrateur** (`luciarasoanirina8@gmail.com`) :
+1. Authentication → Users → *Add user* (email + mot de passe, *Auto Confirm*).
+2. Exécuter `supabase/setup_admin.sql`.
+
+**(Optionnel) Données de démonstration réalistes** : exécuter
+`supabase/seed_demo.sql` (n'efface rien ; respecte les contraintes serveur).
+
+## 6. Fonctionnalités branchées
+
+- ✅ **Synchro offline-first Isar → Supabase** robuste : reprise des feedbacks en
+  erreur/bloqués, idempotence (client_uuid), synchro au démarrage.
+- ✅ **Recherche intelligente** dans l'accueil (établissements + secteurs),
+  résultats affichés directement dans le home.
+- ✅ **Dashboard admin web** 100 % branché sur Supabase (plus de données
+  statiques), **responsive**, **indicateur de page active**.
+- ✅ **Admin peut tout gérer** : modération des feedbacks (statut, priorité,
+  suppression), CRUD établissements, CRUD améliorations, gestion des alertes.
+
+### Reste à brancher (stubs documentés)
 
 - Edge Function d'**analyse IA** (sentiment, thèmes) → remplit `feedbacks.sentiment/themes`
 - **Notifications push** (FCM + Edge Function) pour réponses et améliorations

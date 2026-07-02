@@ -6,12 +6,12 @@ import { createClient } from '@/lib/supabase/client';
 
 /**
  * Page de connexion admin (Email + Mot de passe).
- * Identifiants par défaut : admin@gmail.com / Lucia@1707
- * (à créer dans Supabase Auth puis à ajouter dans la table `admins`).
+ * Compte administrateur : luciarasoanirina8@gmail.com
+ * (à créer dans Supabase Auth puis à ajouter via supabase/setup_admin.sql).
  */
 export default function LoginPage() {
   const router = useRouter();
-  const [email, setEmail] = useState('admin@gmail.com');
+  const [email, setEmail] = useState('luciarasoanirina8@gmail.com');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
