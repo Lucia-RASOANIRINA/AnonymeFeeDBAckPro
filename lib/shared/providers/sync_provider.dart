@@ -46,6 +46,21 @@ class SyncController extends Notifier<SyncState> {
       state = SyncState.offline;
     }
   }
+
+  /// Force la re-synchronisation de TOUT l'historique (bouton « Tout
+  /// resynchroniser »). À utiliser notamment après un changement de projet
+  /// Supabase.
+  Future<void> resyncAll() async {
+    if (state == SyncState.syncing) return;
+    state = SyncState.syncing;
+    try {
+      await ref.read(authProvider.notifier).ensureAnonymousSession();
+      await ref.read(feedbackRepositoryProvider).forceResyncAll();
+      state = SyncState.done;
+    } catch (_) {
+      state = SyncState.offline;
+    }
+  }
 }
 
 final syncControllerProvider =

@@ -177,6 +177,24 @@ class FeedbackRepository {
     }
   }
 
+  /// Re-synchronise TOUT l'historique local, y compris les feedbacks déjà
+  /// marqués `synced`. Utile après un changement de projet Supabase : les
+  /// éléments avaient été poussés vers l'ancien projet, il faut les renvoyer
+  /// vers le nouveau. Idempotent grâce à `client_uuid`.
+  Future<void> forceResyncAll() async {
+    final all = await _isar.feedbackLocals.where().findAll();
+    await _isar.writeTxn(() async {
+      for (final fb in all) {
+        fb
+          ..serverId = null
+          ..syncStatus = LocalSyncStatus.pending
+          ..lastSyncError = null;
+        await _isar.feedbackLocals.put(fb);
+      }
+    });
+    await syncPending();
+  }
+
   Future<void> _markStatus(
     FeedbackLocal fb,
     LocalSyncStatus status, {

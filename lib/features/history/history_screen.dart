@@ -6,18 +6,54 @@ import '../../core/constants/sectors.dart';
 import '../../core/localization/app_strings.dart';
 import '../../data/models/feedback_local.dart';
 import '../../data/repositories/feedback_repository.dart';
+import '../../shared/providers/sync_provider.dart';
 
 /// Historique personnel des feedbacks (lu depuis Isar, donc dispo hors ligne).
 class HistoryScreen extends ConsumerWidget {
   const HistoryScreen({super.key});
 
+  Future<void> _resyncAll(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Resynchronisation en cours…')),
+    );
+    try {
+      await ref.read(syncControllerProvider.notifier).resyncAll();
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Historique resynchronisé avec Supabase.')),
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      messenger.showSnackBar(
+        SnackBar(content: Text('Échec de la resynchronisation : $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final t = AppStrings.of(context);
     final history = ref.watch(feedbackHistoryProvider);
+    final syncing = ref.watch(syncControllerProvider) == SyncState.syncing;
 
     return Scaffold(
-      appBar: AppBar(title: Text(t.t('history'))),
+      appBar: AppBar(
+        title: Text(t.t('history')),
+        actions: [
+          IconButton(
+            tooltip: 'Tout resynchroniser',
+            onPressed: syncing ? null : () => _resyncAll(context, ref),
+            icon: syncing
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cloud_sync_outlined),
+          ),
+        ],
+      ),
       body: history.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('$e')),
