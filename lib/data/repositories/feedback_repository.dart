@@ -1,31 +1,13 @@
-import 'dart:io';
-import 'dart:typed_data';
-
-import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:isar_community/isar.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:uuid/uuid.dart';
 
-import '../../core/config/app_config.dart';
-import '../../core/config/supabase_config.dart';
-import '../datasources/local/isar_service.dart';
-import '../datasources/remote/supabase_service.dart';
-import '../models/feedback_local.dart';
+import '../models/feedback_models.dart';
+// Implémentation choisie à la compilation : Isar sur mobile, en mémoire sur web.
+import 'feedback_repository_web.dart'
+    if (dart.library.io) 'feedback_repository_io.dart' as impl;
 
-/// Repository offline-first des feedbacks.
-///
-/// Règle d'or : on écrit TOUJOURS d'abord dans Isar (instantané, marche hors
-/// ligne), puis on tente la synchro vers Supabase. L'UI lit depuis Isar.
-class FeedbackRepository {
-  FeedbackRepository(this._isar, this._supabase);
-
-  final Isar _isar;
-  final SupabaseService _supabase;
-  static const _uuid = Uuid();
-
-  /// Crée un feedback localement. Retourne l'objet sauvegardé (statut pending).
+/// Contrat du repository de feedbacks (offline-first sur mobile, online-only
+/// sur web). L'UI ne dépend que de cette interface.
+abstract class FeedbackRepository {
   Future<FeedbackLocal> createLocal({
     required String sectorId,
     String? establishmentId,
@@ -34,223 +16,36 @@ class FeedbackRepository {
     required RatingType ratingType,
     String? comment,
     String? suggestion,
-    List<String> localPhotoPaths = const [],
+    List<String> localPhotoPaths,
     String? localVideoPath,
-    bool isCritical = false,
+    bool isCritical,
     String? problemDetails,
-    List<String> problemTypes = const [],
-    bool hasLocation = false,
+    List<String> problemTypes,
+    bool hasLocation,
     double? latitude,
     double? longitude,
     String? locationLabel,
-  }) async {
-    final fb = FeedbackLocal()
-      ..localUuid = _uuid.v4()
-      ..sectorId = sectorId
-      ..establishmentId = establishmentId
-      ..establishmentName = establishmentName
-      ..ratingRaw = ratingRaw
-      ..ratingType = ratingType
-      ..ratingNormalized = _normalizeRating(ratingRaw, ratingType)
-      ..comment = comment
-      ..suggestion = suggestion
-      ..isCritical = isCritical
-      ..problemDetails = problemDetails
-      ..problemTypes = problemTypes
-      ..localPhotoPaths = localPhotoPaths
-      ..localVideoPath = localVideoPath
-      // Un problème critique passe le feedback en priorité dès la création.
-      ..priority = isCritical
-      ..status = FeedbackStatus.submitted
-      ..hasLocation = hasLocation
-      ..latitude = latitude
-      ..longitude = longitude
-      ..locationLabel = locationLabel
-      ..anonCode = _generateAnonCode()
-      ..createdAt = DateTime.now()
-      ..syncStatus = LocalSyncStatus.pending;
+  });
 
-    await _isar.writeTxn(() async {
-      await _isar.feedbackLocals.put(fb);
-    });
-    return fb;
-  }
+  /// Historique des feedbacks de l'appareil, plus récents d'abord.
+  Stream<List<FeedbackLocal>> watchHistory();
 
-  /// Liste les feedbacks de l'appareil, plus récents d'abord (historique perso).
-  Stream<List<FeedbackLocal>> watchHistory() {
-    return _isar.feedbackLocals
-        .where()
-        .sortByCreatedAtDesc()
-        .watch(fireImmediately: true);
-  }
+  /// Éléments non synchronisés (pending / error / syncing).
+  Future<List<FeedbackLocal>> pendingItems();
 
-  /// Éléments non synchronisés : jamais envoyés (`pending`), en `error`, ou
-  /// bloqués en `syncing` (crash pendant une synchro précédente). Les `synced`
-  /// sont exclus.
-  ///
-  /// C'était le bug principal : l'ancienne version ne renvoyait que les
-  /// `pending`, donc un feedback tombé en `error` (coupure réseau, validation
-  /// serveur temporaire...) restait bloqué à jamais et n'était plus jamais
-  /// renvoyé.
-  Future<List<FeedbackLocal>> pendingItems() {
-    return _isar.feedbackLocals
-        .filter()
-        .syncStatusEqualTo(LocalSyncStatus.pending)
-        .or()
-        .syncStatusEqualTo(LocalSyncStatus.error)
-        .or()
-        .syncStatusEqualTo(LocalSyncStatus.syncing)
-        .findAll();
-  }
+  /// Pousse les feedbacks non synchronisés vers Supabase.
+  Future<void> syncPending();
 
-  /// Pousse tous les feedbacks non synchronisés vers Supabase.
-  /// Sûr à appeler de façon répétée (idempotent via `client_uuid` unique
-  /// côté serveur : un doublon est traité comme déjà synchronisé).
-  Future<void> syncPending() async {
-    final pending = await pendingItems();
-    for (final fb in pending) {
-      try {
-        await _markStatus(fb, LocalSyncStatus.syncing);
-
-        // 1) Upload des photos compressées (si présentes).
-        final urls = <String>[];
-        for (final path in fb.localPhotoPaths) {
-          final compressed = await _compress(path);
-          if (compressed == null) continue;
-          final remotePath =
-              '${fb.localUuid}/${DateTime.now().millisecondsSinceEpoch}.jpg';
-          final url = await _supabase.uploadPhoto(
-            SupabaseConfig.feedbackPhotosBucket,
-            remotePath,
-            compressed,
-          );
-          urls.add(url);
-        }
-
-        // 2) Insertion de la ligne. Aucune donnée identifiante n'est envoyée.
-        final inserted = await _supabase.insertFeedback({
-          'client_uuid': fb.localUuid,
-          'sector_id': fb.sectorId,
-          'establishment_id': fb.establishmentId,
-          'rating_normalized': fb.ratingNormalized,
-          'rating_raw': fb.ratingRaw,
-          'rating_type': fb.ratingType.name,
-          'comment': fb.comment,
-          'suggestion': fb.suggestion,
-          'is_critical': fb.isCritical,
-          'problem_details': fb.problemDetails,
-          'problem_types': fb.problemTypes,
-          'priority': fb.priority,
-          'photo_urls': urls,
-          'has_location': fb.hasLocation,
-          'latitude': fb.latitude,
-          'longitude': fb.longitude,
-          'anon_code': fb.anonCode,
-        });
-
-        // 3) Mise à jour locale.
-        await _isar.writeTxn(() async {
-          fb
-            ..serverId = inserted['id']?.toString()
-            ..remotePhotoUrls = urls
-            ..syncStatus = LocalSyncStatus.synced
-            ..lastSyncError = null;
-          await _isar.feedbackLocals.put(fb);
-        });
-      } on PostgrestException catch (e) {
-        // 23505 = violation de contrainte unique (client_uuid déjà présent) :
-        // le feedback a en réalité déjà été inséré lors d'une tentative
-        // précédente. On le considère donc comme synchronisé (idempotence).
-        if (e.code == '23505') {
-          await _isar.writeTxn(() async {
-            fb
-              ..syncStatus = LocalSyncStatus.synced
-              ..lastSyncError = null;
-            await _isar.feedbackLocals.put(fb);
-          });
-        } else {
-          await _markStatus(fb, LocalSyncStatus.error, error: e.message);
-        }
-      } catch (e) {
-        await _markStatus(fb, LocalSyncStatus.error, error: e.toString());
-      }
-    }
-  }
-
-  /// Re-synchronise TOUT l'historique local, y compris les feedbacks déjà
-  /// marqués `synced`. Utile après un changement de projet Supabase : les
-  /// éléments avaient été poussés vers l'ancien projet, il faut les renvoyer
-  /// vers le nouveau. Idempotent grâce à `client_uuid`.
-  Future<void> forceResyncAll() async {
-    final all = await _isar.feedbackLocals.where().findAll();
-    await _isar.writeTxn(() async {
-      for (final fb in all) {
-        fb
-          ..serverId = null
-          ..syncStatus = LocalSyncStatus.pending
-          ..lastSyncError = null;
-        await _isar.feedbackLocals.put(fb);
-      }
-    });
-    await syncPending();
-  }
-
-  Future<void> _markStatus(
-    FeedbackLocal fb,
-    LocalSyncStatus status, {
-    String? error,
-  }) async {
-    await _isar.writeTxn(() async {
-      fb
-        ..syncStatus = status
-        ..lastSyncError = error;
-      await _isar.feedbackLocals.put(fb);
-    });
-  }
-
-  /// Compresse une image pour limiter l'usage de bande passante.
-  Future<Uint8List?> _compress(String path) async {
-    if (!File(path).existsSync()) return null;
-    final dir = await getTemporaryDirectory();
-    final target = '${dir.path}/c_${DateTime.now().microsecondsSinceEpoch}.jpg';
-    final result = await FlutterImageCompress.compressAndGetFile(
-      path,
-      target,
-      quality: AppConfig.imageCompressQuality,
-      minWidth: AppConfig.imageMaxDimension,
-      minHeight: AppConfig.imageMaxDimension,
-    );
-    if (result == null) return null;
-    return result.readAsBytes();
-  }
-
-  /// Normalise toutes les échelles sur 0-100 pour les statistiques.
-  static int _normalizeRating(int raw, RatingType type) {
-    switch (type) {
-      case RatingType.stars:
-      case RatingType.smiley:
-        return (raw.clamp(1, 5) / 5 * 100).round();
-      case RatingType.scale:
-        return (raw.clamp(1, 10) / 10 * 100).round();
-    }
-  }
-
-  /// Code anonyme court et lisible pour le suivi sans compte (ex : FB-7H3K9).
-  static String _generateAnonCode() {
-    final raw = _uuid.v4().replaceAll('-', '').toUpperCase();
-    return 'FB-${raw.substring(0, 5)}';
-  }
+  /// Re-synchronise TOUT l'historique (après changement de projet Supabase).
+  Future<void> forceResyncAll();
 }
 
-final feedbackRepositoryProvider = Provider<FeedbackRepository>((ref) {
-  return FeedbackRepository(
-    ref.read(isarProvider),
-    ref.read(supabaseServiceProvider),
-  );
-});
+/// Fournit l'implémentation adaptée à la plateforme.
+final feedbackRepositoryProvider = Provider<FeedbackRepository>(
+  (ref) => impl.createFeedbackRepository(ref),
+);
 
 /// Stream de l'historique local pour l'UI.
-final feedbackHistoryProvider =
-    StreamProvider<List<FeedbackLocal>>((ref) {
+final feedbackHistoryProvider = StreamProvider<List<FeedbackLocal>>((ref) {
   return ref.read(feedbackRepositoryProvider).watchHistory();
 });

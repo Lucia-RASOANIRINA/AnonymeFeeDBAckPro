@@ -1,4 +1,4 @@
-import '../../../data/models/feedback_local.dart';
+import '../../../data/models/feedback_models.dart';
 
 /// Moteur de **validation temps réel** et de **logique conditionnelle** du
 /// formulaire de feedback (exigence centrale de la V2).

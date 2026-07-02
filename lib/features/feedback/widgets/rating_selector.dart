@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../../../data/models/feedback_local.dart';
+import '../../../data/models/feedback_models.dart';
 
 /// Sélecteur de note adaptatif : étoiles (1-5), échelle (1-10) ou smileys (1-5).
 class RatingSelector extends StatelessWidget {

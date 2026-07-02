@@ -6,11 +6,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app.dart';
+import 'core/bootstrap/local_bootstrap.dart';
 import 'core/config/supabase_config.dart';
 import 'core/error/error_handler.dart';
 import 'core/error/startup_error_app.dart';
 import 'core/utils/app_logger.dart';
-import 'data/datasources/local/isar_service.dart';
 import 'shared/providers/settings_provider.dart';
 
 Future<void> main() async {
@@ -27,8 +27,8 @@ Future<void> main() async {
         authOptions: const FlutterAuthClientOptions(autoRefreshToken: true),
       );
 
-      // 2) Base locale offline-first.
-      final isar = await IsarService.open();
+      // 2) Base locale : Isar sur mobile, rien sur le web (online-only).
+      final localOv = await localOverrides();
 
       // 3) Préférences (langue, thème).
       final prefs = await SharedPreferences.getInstance();
@@ -36,7 +36,7 @@ Future<void> main() async {
       runApp(
         ProviderScope(
           overrides: [
-            isarProvider.overrideWithValue(isar),
+            ...localOv.cast(),
             sharedPreferencesProvider.overrideWithValue(prefs),
           ],
           child: const FeedbackProApp(),

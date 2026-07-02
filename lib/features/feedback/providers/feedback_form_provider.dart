@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../data/models/feedback_local.dart';
+import '../../../data/models/feedback_models.dart';
 import '../logic/feedback_rules.dart';
 
 /// État local du formulaire de feedback (avant sauvegarde) — V2.

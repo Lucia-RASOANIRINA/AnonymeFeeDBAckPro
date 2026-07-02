@@ -5,7 +5,7 @@ import 'package:intl/intl.dart';
 
 import '../../core/constants/sectors.dart';
 import '../../core/localization/app_strings.dart';
-import '../../data/models/feedback_local.dart';
+import '../../data/models/feedback_models.dart';
 import '../../data/repositories/feedback_repository.dart';
 import '../../shared/providers/sync_provider.dart';
 
