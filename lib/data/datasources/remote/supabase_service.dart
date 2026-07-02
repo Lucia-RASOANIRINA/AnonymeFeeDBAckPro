@@ -3,7 +3,6 @@ import 'dart:typed_data';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../core/config/supabase_config.dart';
 import '../../../core/utils/app_logger.dart';
 
 /// Accès centralisé au client Supabase.
@@ -16,25 +15,12 @@ class SupabaseService {
   SupabaseService(this._client);
   final SupabaseClient _client;
 
-  /// Client REST **anonyme** : n'envoie QUE l'en-tête `apikey`, jamais
-  /// `Authorization: Bearer`.
-  ///
-  /// Indispensable avec les clés nouvelle génération `sb_publishable_...` :
-  /// ce ne sont pas des JWT. Envoyées en Bearer (comportement par défaut du
-  /// client quand il n'y a pas de session), elles résolvent un rôle invalide et
-  /// l'insert est refusé (42501). En n'envoyant que l'apikey, PostgREST résout
-  /// correctement le rôle `anon` et l'insertion anonyme passe.
-  static final PostgrestClient _anonRest = PostgrestClient(
-    '${SupabaseConfig.url}/rest/v1',
-    headers: {'apikey': SupabaseConfig.anonKey},
-  );
-
-  /// Insère un feedback de façon anonyme (rôle `anon`). La RLS interdit toujours
-  /// la relecture des feedbacks d'autrui.
+  /// Insère un feedback (client standard). L'insertion anonyme est autorisée par
+  /// la policy RLS `for insert to public`. La RLS interdit toujours la relecture
+  /// des feedbacks d'autrui (réservée aux admins).
   Future<Map<String, dynamic>> insertFeedback(Map<String, dynamic> payload) async {
-    final res =
-        await _anonRest.from('feedbacks').insert(payload).select().single();
-    return Map<String, dynamic>.from(res);
+    final res = await _client.from('feedbacks').insert(payload).select().single();
+    return res;
   }
 
   /// Récupère les améliorations publiées (table publique en lecture seule).
@@ -235,7 +221,7 @@ class SupabaseService {
     required String anonCode,
     required String body,
   }) async {
-    await _anonRest.from('conversation_messages').insert({
+    await _client.from('conversation_messages').insert({
       'feedback_id': feedbackId,
       'anon_code': anonCode,
       'sender': 'user',
