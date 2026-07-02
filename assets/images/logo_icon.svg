@@ -1,0 +1,17 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FeedbackPro">
+  <defs>
+    <linearGradient id="fbpGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B7A43"/>
+      <stop offset="1" stop-color="#0E5C30"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#fbpGrad)"/>
+  <!-- Bulle de feedback -->
+  <path d="M132 120h248a44 44 0 0 1 44 44v152a44 44 0 0 1-44 44H250l-70 60a12 12 0 0 1-20-9v-51h-28a44 44 0 0 1-44-44V164a44 44 0 0 1 44-44z" fill="#FFFFFF"/>
+  <!-- Barres de satisfaction (feedback qui progresse) -->
+  <rect x="168" y="252" width="38" height="52" rx="10" fill="#1B7A43"/>
+  <rect x="237" y="212" width="38" height="92" rx="10" fill="#1B7A43"/>
+  <rect x="306" y="172" width="38" height="132" rx="10" fill="#1B7A43"/>
+  <!-- Point d'evaluation -->
+  <circle cx="325" cy="150" r="15" fill="#F4B400"/>
+</svg>

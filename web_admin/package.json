@@ -1,8 +1,8 @@
 {
-  "name": "anonyfeedback-admin",
-  "version": "2.0.0",
+  "name": "feedbackpro-admin",
+  "version": "3.0.0",
   "private": true,
-  "description": "AnonyFeedback Pro v2 — Web Admin (Next.js 15)",
+  "description": "FeedbackPro — Web Admin (Next.js 15)",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

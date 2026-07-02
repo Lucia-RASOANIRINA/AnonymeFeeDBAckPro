@@ -14,6 +14,12 @@ import {
   X,
 } from 'lucide-react';
 
+/** Logo FeedbackPro (icône + mot-symbole). */
+const Brand = () => (
+  // eslint-disable-next-line @next/next/no-img-element
+  <img src="/logo.svg" alt="FeedbackPro" className="h-8 w-auto" />
+);
+
 const nav = [
   { href: '/dashboard', label: 'Tableau de bord', icon: LayoutDashboard, exact: true },
   { href: '/dashboard/feedbacks', label: 'Feedbacks', icon: MessageSquare },
@@ -74,7 +80,7 @@ export function Sidebar() {
     <>
       {/* Barre supérieure mobile */}
       <div className="md:hidden sticky top-0 z-30 flex items-center justify-between bg-white border-b px-4 py-3">
-        <h1 className="text-lg font-bold text-brand">AnonyFeedback</h1>
+        <Brand />
         <button
           onClick={() => setOpen(true)}
           aria-label="Ouvrir le menu"
@@ -87,7 +93,7 @@ export function Sidebar() {
       {/* Sidebar desktop */}
       <aside className="hidden md:flex w-60 shrink-0 bg-white border-r flex-col sticky top-0 h-screen">
         <div className="p-5 border-b">
-          <h1 className="text-lg font-bold text-brand">AnonyFeedback</h1>
+          <Brand />
         </div>
         <NavLinks />
         <SignOut />
@@ -102,7 +108,7 @@ export function Sidebar() {
           />
           <aside className="relative w-64 max-w-[80%] bg-white flex flex-col h-full shadow-xl">
             <div className="p-5 border-b flex items-center justify-between">
-              <h1 className="text-lg font-bold text-brand">AnonyFeedback</h1>
+              <Brand />
               <button
                 onClick={() => setOpen(false)}
                 aria-label="Fermer le menu"

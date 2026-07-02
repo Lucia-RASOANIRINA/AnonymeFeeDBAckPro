@@ -2,8 +2,9 @@ import type { Metadata } from 'next';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'AnonyFeedback Pro — Admin',
+  title: 'FeedbackPro — Admin',
   description: 'Plateforme d’administration des retours anonymes',
+  icons: { icon: '/icon.svg' },
 };
 
 export default function RootLayout({

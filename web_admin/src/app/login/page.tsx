@@ -37,8 +37,9 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm bg-white rounded-2xl shadow-md p-8 space-y-5"
       >
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-brand">AnonyFeedback Pro</h1>
+        <div className="flex flex-col items-center text-center gap-2">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.svg" alt="FeedbackPro" className="h-11 w-auto" />
           <p className="text-sm text-gray-500">Espace administrateur</p>
         </div>
 
