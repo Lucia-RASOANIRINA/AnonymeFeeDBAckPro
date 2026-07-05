@@ -1,31 +1,61 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../shared/providers/settings_provider.dart';
 import '../datasources/remote/supabase_service.dart';
 import '../models/feedback_models.dart';
 import 'feedback_repository.dart';
 
-/// Implémentation WEB (online-only) du repository.
+/// Implémentation WEB du repository.
 ///
-/// Le web n'a pas Isar : l'historique est gardé en mémoire pour la session, et
-/// chaque feedback est poussé directement vers Supabase. La logique de statut
-/// de synchro est conservée pour une UI identique au mobile.
+/// Le web n'a pas Isar, mais l'historique est **persisté dans localStorage**
+/// (via shared_preferences, backé par window.localStorage sur le web) : il
+/// survit donc aux rechargements de page. Chaque feedback est aussi poussé vers
+/// Supabase. La logique de statut de synchro est identique au mobile.
 class WebFeedbackRepository implements FeedbackRepository {
-  WebFeedbackRepository(this._supabase);
+  WebFeedbackRepository(this._supabase, this._prefs) {
+    _load();
+  }
 
   final SupabaseService _supabase;
+  final SharedPreferences _prefs;
   static const _uuid = Uuid();
+  static const _storageKey = 'feedback_history_v1';
 
   final List<FeedbackLocal> _items = [];
   final _controller = StreamController<List<FeedbackLocal>>.broadcast();
+
+  void _load() {
+    final raw = _prefs.getString(_storageKey);
+    if (raw == null || raw.isEmpty) return;
+    try {
+      final list = jsonDecode(raw) as List;
+      _items
+        ..clear()
+        ..addAll(list.map((e) =>
+            FeedbackLocal.fromJson(Map<String, dynamic>.from(e as Map))));
+    } catch (_) {
+      // Données corrompues : on repart propre.
+    }
+  }
+
+  Future<void> _persist() async {
+    await _prefs.setString(
+      _storageKey,
+      jsonEncode(_items.map((e) => e.toJson()).toList()),
+    );
+  }
 
   void _emit() {
     final sorted = [..._items]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     _controller.add(sorted);
+    _persist();
   }
 
   @override
@@ -167,5 +197,7 @@ class WebFeedbackRepository implements FeedbackRepository {
 }
 
 /// Fabrique appelée par le provider (voir feedback_repository.dart).
-FeedbackRepository createFeedbackRepository(Ref ref) =>
-    WebFeedbackRepository(ref.read(supabaseServiceProvider));
+FeedbackRepository createFeedbackRepository(Ref ref) => WebFeedbackRepository(
+      ref.read(supabaseServiceProvider),
+      ref.read(sharedPreferencesProvider),
+    );
