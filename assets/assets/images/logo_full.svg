@@ -1,0 +1,19 @@
+<svg width="320" height="72" viewBox="0 0 320 72" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FeedbackPro">
+  <defs>
+    <linearGradient id="fbpLogoGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1B7A43"/>
+      <stop offset="1" stop-color="#0E5C30"/>
+    </linearGradient>
+  </defs>
+  <!-- Icone -->
+  <g transform="translate(4,4)">
+    <rect width="64" height="64" rx="16" fill="url(#fbpLogoGrad)"/>
+    <path d="M17 15h31a5.5 5.5 0 0 1 5.5 5.5v19A5.5 5.5 0 0 1 48 45H31.5l-8.7 7.5A1.5 1.5 0 0 1 20 51.3V45h-3a5.5 5.5 0 0 1-5.5-5.5v-19A5.5 5.5 0 0 1 17 15z" fill="#FFFFFF"/>
+    <rect x="21" y="31.5" width="4.8" height="6.5" rx="1.4" fill="#1B7A43"/>
+    <rect x="29.6" y="26.5" width="4.8" height="11.5" rx="1.4" fill="#1B7A43"/>
+    <rect x="38.2" y="21.5" width="4.8" height="16.5" rx="1.4" fill="#1B7A43"/>
+    <circle cx="40.6" cy="18.7" r="1.9" fill="#F4B400"/>
+  </g>
+  <!-- Texte -->
+  <text x="82" y="45" font-family="Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="30" font-weight="700" fill="#0E5C30">Feedback<tspan fill="#1B7A43">Pro</tspan></text>
+</svg>
